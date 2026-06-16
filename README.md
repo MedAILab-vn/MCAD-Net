@@ -15,7 +15,7 @@ Diagnosing ophthalmic diseases often requires comprehensive analysis of both Col
 * **High Performance:** 
 
 ## 🏗️ Architecture
-
+![MCAD-Net Architecture](MCAD-Net_OverallArchitecture.png)
 
 ## ⚙️ Installation
 
