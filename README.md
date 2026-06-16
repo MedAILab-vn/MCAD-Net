@@ -23,3 +23,10 @@ Diagnosing ophthalmic diseases often requires comprehensive analysis of both Col
 ```bash
 git clone https://github.com/MedAILab-vn/MCAD-Net.git
 cd MCAD-Net
+
+## Datasets
+The datasets used in this study are publicly available:
+1. **MMC-AMD**: [[Dataset Link](https://github.com/li-xirong/mmc-amd?tab=readme-ov-file)]
+3. **GAMMA**: [[Dataset Link](https://aistudio.baidu.com/competition/detail/119/0/introduction)]
+
+Ensure you have the datasets downloaded and organized as described in the documentation before training or evaluating the model.
