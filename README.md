@@ -8,6 +8,9 @@
 This repository contains the implementation of the paper **"A Multi-Scale Cross-Attention Network with
 Knowledge Distillation for Retinal Disease Classification"**
 
+## Update
++ [2026-06] Public source code
+
 ## Abstract
 Diagnosing ophthalmic diseases often requires comprehensive analysis of both Color Fundus Photography (CFP) and Optical Coherence Tomography (OCT). We propose **MCAD-Net**, a novel Multi-modal Cross-Attention Distillation Network designed to effectively fuse robust representations from both modalities. By leveraging a bidirectional spatial cross-attention mechanism and handling shallow/deep semantic features, MCAD-Net consistently outperforms existing state-of-the-art single-modal and multi-modal baseline methods.
 
