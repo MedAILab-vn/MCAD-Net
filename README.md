@@ -29,4 +29,4 @@ The datasets used in this study are publicly available:
 1. **MMC-AMD**: [[Dataset Link](https://github.com/li-xirong/mmc-amd?tab=readme-ov-file)]
 3. **GAMMA**: [[Dataset Link](https://aistudio.baidu.com/competition/detail/119/0/introduction)]
 
-Ensure you have the datasets downloaded and organized as described in the documentation before training or evaluating the model.
+Ensure you have the datasets downloaded and organized before training or evaluating the model.
