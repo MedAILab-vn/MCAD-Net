@@ -28,7 +28,7 @@ git clone https://github.com/MedAILab-vn/MCAD-Net.git
 cd MCAD-Net
 ```
 ## Datasets
-The datasets used in this study are publicly available:
+The datasets used in this study are available:
 1. **MMC-AMD**: [[Dataset Link](https://github.com/li-xirong/mmc-amd?tab=readme-ov-file)]
 3. **GAMMA**: [[Dataset Link](https://aistudio.baidu.com/competition/detail/119/0/introduction)]
 
