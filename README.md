@@ -2,8 +2,11 @@
 
 [![Pytorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?e&logo=PyTorch&logoColor=white)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Paper](https://img.shields.io/badge/Paper-Accepted-brightgreen.svg)]() Official PyTorch implementation of the paper: **"A Multi-Scale Cross-Attention Network with
-Knowledge Distillation for Retinal Disease Classification"**.
+[![Paper](https://img.shields.io/badge/Paper-Accepted-brightgreen.svg)]() 
+
+## Introduction
+This repository contains the implementation of the paper **"A Multi-Scale Cross-Attention Network with
+Knowledge Distillation for Retinal Disease Classification"**
 
 ## Abstract
 Diagnosing ophthalmic diseases often requires comprehensive analysis of both Color Fundus Photography (CFP) and Optical Coherence Tomography (OCT). We propose **MCAD-Net**, a novel Multi-modal Cross-Attention Distillation Network designed to effectively fuse robust representations from both modalities. By leveraging a bidirectional spatial cross-attention mechanism and handling shallow/deep semantic features, MCAD-Net consistently outperforms existing state-of-the-art single-modal and multi-modal baseline methods.
