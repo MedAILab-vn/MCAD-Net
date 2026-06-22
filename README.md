@@ -2,7 +2,7 @@
 
 [![Pytorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?e&logo=PyTorch&logoColor=white)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Paper](https://img.shields.io/badge/Paper-Accepted-brightgreen.svg)]() 
+[![Paper]()]() 
 
 ## Introduction
 This repository contains the implementation of the paper **"A Multi-Scale Cross-Attention Network with
