@@ -32,7 +32,14 @@ cd MCAD-Net
 ```
 ## Datasets
 The datasets used in this study are available:
-1. **MMC-AMD**: [[Dataset Link](https://github.com/li-xirong/mmc-amd?tab=readme-ov-file)]
-3. **GAMMA**: [[Dataset Link](https://aistudio.baidu.com/competition/detail/119/0/introduction)]
-
+1. **MMC-AMD**:
+   [[Official](https://github.com/li-xirong/mmc-amd?tab=readme-ov-file)]
+3. **GAMMA**:
+   [[Official](https://aistudio.baidu.com/competition/detail/119/0/introduction)]
+   [[Download Link](https://huggingface.co/datasets/yujiaxue/GAMMA/tree/main)]
+4. **MultiEYE**:
+   [[Official](https://github.com/xmed-lab/MultiEYE)]
+   [[Download Link](https://huggingface.co/datasets/Luxuriant16/MultiEYE)]
+3. **Harvard FairVision**:
+   [[Official](https://github.com/Harvard-Ophthalmology-AI-Lab/FairVision)]   
 Ensure you have the datasets downloaded and organized before training or evaluating the model.
