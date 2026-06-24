@@ -15,16 +15,20 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from config import Config
 from data.dataset import MMCAmdCSVDataset, build_cfp_transform, build_oct_transform, GAMMADataset, \
     HarvardFairVisionDataset, TOPCONDataset
-from models.MCAD_net import MCAD_Model, MCAD_Model_cs, MCAD_Model_MultiScale, MCAD_Model_MultiScale_CFPOnly, MCAD_Model_SupCon, \
-    MCAD_Model_Asyn, MCAD_Model_SynScale2, MCAD_Model_LateFusion, MCAD_Model_DenseNet, MCAD_Model_GhostNet, MCAD_Model_SynScale2_b1, MCAD_Model_LateFusionOnly, \
-    MCAD_Model_LateFusionOnlyFlat, MCAD_Model_Scale2CrossAttOnly
+from models.mcat_net import MCAT_Model, MCAT_Model_cs, MCAT_Model_MultiScale, MCAT_Model_MultiScale_CFPOnly, \
+    MCAT_Model_SupCon, \
+    MCAT_Model_Asyn, MCAT_Model_SynScale2, MCAT_Model_LateFusion, MCAT_Model_DenseNet, MCAT_Model_GhostNet, \
+    MCAT_Model_SynScale2_b1, MCAT_Model_LateFusionOnly, \
+    MCAT_Model_LateFusionOnlyFlat, MCAT_Model_Scale2CrossAttOnly
 from utils.engine import evaluate_with_uncertainty, set_seed, enable_dropout
 from models.losses import build_loss_function, MultimodalSupConLoss
 import gc
+
 os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 from thop import profile
 
-def train_and_evaluate(train_df, val_df, config, device, fold=None, dataset_name='mmc-amd'):
+
+def train_and_evaluate(train_df, val_df, test_df, config, device, fold=None, dataset_name='mmc-amd'):
     set_seed(config.random_seed)
 
     output_dir = config.get_output_dir(fold=fold)
@@ -39,20 +43,40 @@ def train_and_evaluate(train_df, val_df, config, device, fold=None, dataset_name
                                     build_cfp_transform(config, True), build_oct_transform(config, True), "Train_Set")
         val_ds = MMCAmdCSVDataset(val_df, config.cfp_data_dir, config.oct_data_dir,
                                   build_cfp_transform(config, False), build_oct_transform(config, False), "Val_Set")
-        test_loader = None
+        if test_df is not None:
+            test_ds = MMCAmdCSVDataset(test_df, config.cfp_data_dir, config.oct_data_dir,
+                                       build_cfp_transform(config, False), build_oct_transform(config, False),
+                                       "Test_Set")
+            test_loader = DataLoader(test_ds, batch_size=config.batch_size, shuffle=False, pin_memory=config.pin_memory,
+                                     num_workers=config.num_workers)
+        else:
+            test_loader = None
 
     elif dataset_name == 'gamma':
         train_ds = GAMMADataset(train_df, config.cfp_data_dir, config.oct_data_dir,
                                 build_cfp_transform(config, True), build_oct_transform(config, True), "Train_Set")
         val_ds = GAMMADataset(val_df, config.cfp_data_dir, config.oct_data_dir,
                               build_cfp_transform(config, False), build_oct_transform(config, False), "Val_Set")
-        test_loader = None
+        if test_df is not None:
+            test_ds = GAMMADataset(test_df, config.cfp_data_dir, config.oct_data_dir,
+                                   build_cfp_transform(config, False), build_oct_transform(config, False), "Test_Set")
+            test_loader = DataLoader(test_ds, batch_size=config.batch_size, shuffle=False, pin_memory=config.pin_memory,
+                                     num_workers=config.num_workers)
+        else:
+            test_loader = None
+
     elif dataset_name == 'topcon-mm':
         train_ds = TOPCONDataset(train_df, config.cfp_data_dir, config.oct_data_dir,
                                  build_cfp_transform(config, True), build_oct_transform(config, True), "Train_Set")
         val_ds = TOPCONDataset(val_df, config.cfp_data_dir, config.oct_data_dir,
                                build_cfp_transform(config, False), build_oct_transform(config, False), "Val_Set")
-        test_loader = None
+        if test_df is not None:
+            test_ds = TOPCONDataset(test_df, config.cfp_data_dir, config.oct_data_dir,
+                                    build_cfp_transform(config, False), build_oct_transform(config, False), "Test_Set")
+            test_loader = DataLoader(test_ds, batch_size=config.batch_size, shuffle=False, pin_memory=config.pin_memory,
+                                     num_workers=config.num_workers)
+        else:
+            test_loader = None
 
     elif dataset_name == 'HarvardFairVision-AMD' or dataset_name == 'HarvardFairVision-DR':
         train_ds = HarvardFairVisionDataset(config.cfp_data_dir, config.oct_data_dir, split="train",
@@ -75,38 +99,38 @@ def train_and_evaluate(train_df, val_df, config, device, fold=None, dataset_name
 
     criterion_supcon = None
 
-    if config.model_type == 'MCAD_Model':
-        model = MCAD_Model(num_classes=config.num_classes, embed_dim=config.embed_dim, dropout_rate=config.dropout,
+    if config.model_type == 'MCAT_Model':
+        model = MCAT_Model(num_classes=config.num_classes, embed_dim=config.embed_dim, dropout_rate=config.dropout,
                            attention_type=config.attention_type).to(device)
-    elif config.model_type == 'MCAD_Model_cs':
-        model = MCAD_Model_cs(num_classes=config.num_classes, embed_dim=config.embed_dim, dropout_rate=config.dropout,
+    elif config.model_type == 'MCAT_Model_cs':
+        model = MCAT_Model_cs(num_classes=config.num_classes, embed_dim=config.embed_dim, dropout_rate=config.dropout,
                               attention_type=config.attention_type).to(device)
-    elif config.model_type == 'MCAD_Model_MultiScale':
-        model = MCAD_Model_MultiScale(config).to(device)
-    elif config.model_type == 'MCAD_Model_Asyn':
-        model = MCAD_Model_Asyn(config).to(device)
-    elif config.model_type == 'MCAD_Model_SynScale2':
-        model = MCAD_Model_SynScale2(config).to(device)
-    elif config.model_type == 'MCAD_Model_LateFusionOnly':
-        model = MCAD_Model_LateFusionOnly(config).to(device)
-    elif config.model_type == 'MCAD_Model_LateFusionOnlyFlat':
-        model = MCAD_Model_LateFusionOnlyFlat(config).to(device)
-    elif config.model_type == 'MCAD_Model_Scale2CrossAttOnly':
-        model = MCAD_Model_Scale2CrossAttOnly(config).to(device)
-    elif config.model_type == 'MCAD_Model_SynScale2_b1':
-        model = MCAD_Model_SynScale2_b1(config).to(device)
-    elif config.model_type == 'MCAD_Model_LateFusion':
-        model = MCAD_Model_LateFusion(config).to(device)
-    elif config.model_type == 'MCAD_Model_DenseNet':
-        model = MCAD_Model_DenseNet(config).to(device)
-    elif config.model_type == 'MCAD_Model_GhostNet':
-        model = MCAD_Model_GhostNet(config).to(device)
-    elif config.model_type == 'MCAD_Model_MultiScale_CFPOnly':
-        model = MCAD_Model_MultiScale_CFPOnly(num_classes=config.num_classes, embed_dim=config.embed_dim,
-                                          dropout_rate=config.dropout,
-                                          attention_type=config.attention_type).to(device)
-    elif config.model_type == 'MCAD_Model_SupCon':
-        model = MCAD_Model_SupCon(config).to(device)
+    elif config.model_type == 'MCAT_Model_MultiScale':
+        model = MCAT_Model_MultiScale(config).to(device)
+    elif config.model_type == 'MCAT_Model_Asyn':
+        model = MCAT_Model_Asyn(config).to(device)
+    elif config.model_type == 'MCAT_Model_SynScale2':
+        model = MCAT_Model_SynScale2(config).to(device)
+    elif config.model_type == 'MCAT_Model_LateFusionOnly':
+        model = MCAT_Model_LateFusionOnly(config).to(device)
+    elif config.model_type == 'MCAT_Model_LateFusionOnlyFlat':
+        model = MCAT_Model_LateFusionOnlyFlat(config).to(device)
+    elif config.model_type == 'MCAT_Model_Scale2CrossAttOnly':
+        model = MCAT_Model_Scale2CrossAttOnly(config).to(device)
+    elif config.model_type == 'MCAT_Model_SynScale2_b1':
+        model = MCAT_Model_SynScale2_b1(config).to(device)
+    elif config.model_type == 'MCAT_Model_LateFusion':
+        model = MCAT_Model_LateFusion(config).to(device)
+    elif config.model_type == 'MCAT_Model_DenseNet':
+        model = MCAT_Model_DenseNet(config).to(device)
+    elif config.model_type == 'MCAT_Model_GhostNet':
+        model = MCAT_Model_GhostNet(config).to(device)
+    elif config.model_type == 'MCAT_Model_MultiScale_CFPOnly':
+        model = MCAT_Model_MultiScale_CFPOnly(num_classes=config.num_classes, embed_dim=config.embed_dim,
+                                              dropout_rate=config.dropout,
+                                              attention_type=config.attention_type).to(device)
+    elif config.model_type == 'MCAT_Model_SupCon':
+        model = MCAT_Model_SupCon(config).to(device)
         criterion_supcon = MultimodalSupConLoss(temperature=config.supcon_temperature).to(device)
 
     total_params = sum(p.numel() for p in model.parameters())
@@ -163,7 +187,7 @@ def train_and_evaluate(train_df, val_df, config, device, fold=None, dataset_name
 
             optimizer.zero_grad()
 
-            if config.model_type == 'MCAD_Model_SupCon':
+            if config.model_type == 'MCAT_Model_SupCon':
                 enable_dropout(model)
                 mc_passes = getattr(config, 'mc_passes_train', 50)
                 out, vec_cfp, vec_oct = model(inputs_CFP, inputs_OCT, mc_passes=mc_passes)
@@ -283,11 +307,12 @@ def train_and_evaluate(train_df, val_df, config, device, fold=None, dataset_name
 
     return final_val_mc, best_val_metrics
 
-def main(current_seed, dname, alpha=0.01, branch_attention_type=None, dropout=0.5, loss_type="CE", batch_size=16, mc_passes_train=50):
 
+def main(current_seed, dname, alpha=0.01, branch_attention_type=None, dropout=0.5, loss_type="CE", batch_size=16,
+         mc_passes_train=50):
     config = Config(
         dataset_name=dname,
-        model_type='MCAD_Model_SynScale2',
+        model_type='MCAT_Model_SynScale2',
         use_cfp_only=False,
         batch_size=batch_size,
         attention_type='None',
@@ -325,10 +350,11 @@ def main(current_seed, dname, alpha=0.01, branch_attention_type=None, dropout=0.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     if config.run_mode == 'train_val_test' or config.dataset_name.startswith('HarvardFairVision'):
-        train_and_evaluate(None, None, config, device, fold=None, dataset_name=config.dataset_name)
+        train_and_evaluate(None, None, None, config, device, fold=None, dataset_name=config.dataset_name)
 
     else:
-        df_all = pd.read_csv(config.csv_path, sep=None, engine='python', encoding='utf-8-sig')
+        df_train_all = pd.read_csv(config.csv_path_training, sep=None, engine='python', encoding='utf-8-sig')
+        df_test = pd.read_csv(config.csv_path_testing, sep=None, engine='python', encoding='utf-8-sig')
 
         if config.dataset_name == 'gamma':
             def get_gamma_label(row):
@@ -339,47 +365,49 @@ def main(current_seed, dname, alpha=0.01, branch_attention_type=None, dropout=0.
                 elif row.get('mid_advanced', 0) == 1:
                     return 2
                 return 0
-            df_all['label'] = df_all.apply(get_gamma_label, axis=1)
+
+            df_train_all['label'] = df_train_all.apply(get_gamma_label, axis=1)
+            df_test['label'] = df_test.apply(get_gamma_label, axis=1)
 
         if config.run_mode == 'single':
-            train_df, val_df = train_test_split(df_all, test_size=config.test_size, stratify=df_all['label'], random_state=config.random_seed)
-            print(f"Total images -> Train: {len(train_df)} | Val: {len(val_df)}")
-            train_and_evaluate(train_df, val_df, config, device, fold=None, dataset_name=config.dataset_name)
+            train_df, val_df = train_test_split(df_train_all, test_size=config.test_size,
+                                                stratify=df_train_all['label'], random_state=config.random_seed)
+            print(f"Total images -> Train: {len(train_df)} | Val: {len(val_df)} | Test: {len(df_test)}")
+            train_and_evaluate(train_df, val_df, df_test, config, device, fold=None, dataset_name=config.dataset_name)
 
         elif config.run_mode == 'kfold':
 
             if config.dataset_name == 'topcon-mm':
                 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 
-                label_cols = [c for c in df_all.columns if c not in ['core_id', 'cfp', 'oct']]
-                y_multilabel = df_all[label_cols].values
+                label_cols = [c for c in df_train_all.columns if c not in ['core_id', 'cfp', 'oct']]
+                y_multilabel = df_train_all[label_cols].values
 
                 mskf = MultilabelStratifiedKFold(n_splits=config.k_folds, shuffle=True, random_state=config.random_seed)
-                fold_splits = mskf.split(df_all, y_multilabel)
+                fold_splits = mskf.split(df_train_all, y_multilabel)
 
             else:
                 from sklearn.model_selection import StratifiedKFold
                 skf = StratifiedKFold(n_splits=config.k_folds, shuffle=True, random_state=config.random_seed)
-                fold_splits = skf.split(df_all, df_all['label'])
+                fold_splits = skf.split(df_train_all, df_train_all['label'])
 
             fold_results = []
             fold_best_results = []
 
             for fold, (train_idx, val_idx) in enumerate(fold_splits, 1):
-                train_df = df_all.iloc[train_idx]
-                val_df = df_all.iloc[val_idx]
+                train_df = df_train_all.iloc[train_idx]
+                val_df = df_train_all.iloc[val_idx]
                 print(f"\n--- FOLD {fold}/{config.k_folds} ---")
-                print(f"Train: {len(train_df)} | Val: {len(val_df)}")
+                print(f"Train: {len(train_df)} | Val: {len(val_df)} | Test: {len(df_test)}")
 
                 if config.dataset_name == 'topcon-mm':
                     val_disease_counts = val_df[label_cols].sum().to_dict()
                     print(f"Checking Val set label distribution: {val_disease_counts}")
 
-                metrics, best_metrics = train_and_evaluate(train_df, val_df, config, device, fold=fold,
+                metrics, best_metrics = train_and_evaluate(train_df, val_df, df_test, config, device, fold=fold,
                                                            dataset_name=config.dataset_name)
                 fold_results.append(metrics)
                 fold_best_results.append(best_metrics)
-
 
             df_kfold = pd.DataFrame(fold_results)
             mean_metrics = df_kfold.mean(numeric_only=True)
@@ -405,7 +433,9 @@ def main(current_seed, dname, alpha=0.01, branch_attention_type=None, dropout=0.
             std_row_best = std_metrics_best.to_dict()
             std_row_best['Split'] = 'Std_Dev'
             df_kfold_best = pd.concat([df_kfold_best, pd.DataFrame([mean_row_best, std_row_best])], ignore_index=True)
-            df_kfold_best.to_csv(os.path.join(base_kfold_dir, f"KFold_{config.k_folds}_Summary_BestTrainEpoch_rs{config.random_seed}.csv"), index=False)
+            df_kfold_best.to_csv(os.path.join(base_kfold_dir,
+                                              f"KFold_{config.k_folds}_Summary_BestTrainEpoch_rs{config.random_seed}.csv"),
+                                 index=False)
 
 
 if __name__ == "__main__":
