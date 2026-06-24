@@ -51,7 +51,8 @@ class Config:
 
         # 4. Data Paths
         self.dataset_name = 'mmc-amd'
-        self.csv_path = r'data/mmc_amd_all_unique_pairs.csv'
+        self.csv_path_training = r'data/mmc_amd_all_unique_pairs_training.csv'
+        self.csv_path_testing = r'data/mmc_amd_all_unique_pairs_testing.csv'
         self.cfp_data_dir = r'D:\Projects\Personal\Master\OCT\Dataset\mmc-amd\ImageData\cfp-clahe-448x448'
         self.oct_data_dir = r'D:\Projects\Personal\Master\OCT\Dataset\mmc-amd\ImageData\oct-median3x3-448x448'
 
