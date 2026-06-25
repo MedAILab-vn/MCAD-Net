@@ -29,5 +29,6 @@ The datasets used in this study are available:
    [[Official](https://github.com/xmed-lab/MultiEYE)]
    [[Download Link](https://huggingface.co/datasets/Luxuriant16/MultiEYE)]
 3. **Harvard FairVision**:
-   [[Official](https://github.com/Harvard-Ophthalmology-AI-Lab/FairVision)]   
+   [[Official](https://github.com/Harvard-Ophthalmology-AI-Lab/FairVision)]
+   
 Ensure you have the datasets downloaded and organized before training or evaluating the model.
