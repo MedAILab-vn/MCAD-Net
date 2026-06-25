@@ -1,4 +1,4 @@
-# MCAD-Net: Multi-modal Cross-Attention Distillation Network 
+# MCAD-Net 
 
 [![Pytorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?e&logo=PyTorch&logoColor=white)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -6,7 +6,7 @@
 
 ## Introduction
 This repository contains the implementation of the paper **"A Multi-Scale Cross-Attention Network with
-Knowledge Distillation for Retinal Disease Classification"**
+Knowledge Distillation for Retinal Disease Classification"** (Under review)
 
 ## Update
 + [2026-06] Public source code
